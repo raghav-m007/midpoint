@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Midpoint</title>
+<meta name="description" content="Half the difference, added to the smaller number.">
+<meta name="theme-color" content="#10141a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Midpoint">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" href="./icons/icon-192.png">
+<style>
+:root{
+  --bg:#10141a; --panel:#171d26; --panel-2:#1d2531; --line:#28313e;
+  --ink:#e9eef5; --muted:#8c99ab; --faint:#616e80;
+  --accent:#5b9df9; --accent-ink:#06182e; --good:#3ddc97;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-l:env(safe-area-inset-left,0px); --safe-r:env(safe-area-inset-right,0px);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:400 16px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;overscroll-behavior:none;touch-action:manipulation;
+  display:flex;flex-direction:column;
+  padding:calc(var(--safe-t) + 18px) calc(var(--safe-r) + 18px) calc(var(--safe-b) + 18px) calc(var(--safe-l) + 18px);
+}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.01em}
+.sub{color:var(--faint);font-size:12.5px;margin-top:2px}
+header{flex:none;margin-bottom:20px}
+
+.inputs{display:flex;gap:11px;flex:none}
+.field{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:12px 14px}
+.field:focus-within{border-color:var(--accent)}
+.field label{display:block;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+.field input{
+  width:100%;background:none;border:0;color:var(--ink);padding:0;
+  font-size:27px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+}
+.field input:focus{outline:none}
+.field input::placeholder{color:#3b4654}
+.field.lo label{color:var(--accent)}
+
+.result{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;min-height:0;padding:22px 4px;
+}
+.result-label{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.value{
+  font-size:clamp(44px,15vw,74px);font-weight:700;letter-spacing:-.035em;line-height:1.05;
+  font-variant-numeric:tabular-nums;text-align:center;word-break:break-all;
+}
+.value.empty{color:#39434f}
+.copy{
+  margin-top:4px;font-size:12.5px;font-weight:600;color:var(--muted);
+  padding:7px 15px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);
+}
+.copy:active{transform:scale(.95)}
+.copy.done{color:var(--good);border-color:transparent;background:#12301f}
+.copy[hidden]{display:none}
+
+.working{flex:none;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:13px 15px}
+.working-h{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+.step{display:flex;align-items:baseline;gap:8px;font-size:14.5px;font-variant-numeric:tabular-nums;padding:3px 0;color:var(--muted)}
+.step b{color:var(--ink);font-weight:600}
+.step i{font-style:normal;color:var(--faint);font-size:12px;margin-left:auto;white-space:nowrap}
+.hint{color:var(--faint);font-size:12.5px;line-height:1.45}
+
+.clear{flex:none;margin-top:12px;width:100%;padding:14px;border-radius:14px;background:var(--panel-2);border:1px solid var(--line);font-weight:650;font-size:15px;color:var(--muted)}
+.clear:active{transform:scale(.985)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Midpoint</h1>
+  <div class="sub">Half the difference, added to the smaller number.</div>
+</header>
+
+<div class="inputs">
+  <div class="field" id="f-a">
+    <label for="a">Number A</label>
+    <input id="a" type="text" inputmode="decimal" autocomplete="off" placeholder="909" enterkeyhint="done">
+  </div>
+  <div class="field" id="f-b">
+    <label for="b">Number B</label>
+    <input id="b" type="text" inputmode="decimal" autocomplete="off" placeholder="867" enterkeyhint="done">
+  </div>
+</div>
+
+<div class="result">
+  <div class="result-label">Result</div>
+  <div class="value empty" id="value">—</div>
+  <button class="copy" id="copy" hidden>Copy</button>
+</div>
+
+<div class="working">
+  <div class="working-h">Working</div>
+  <div id="working"><p class="hint">Enter both numbers and the steps appear here.</p></div>
+</div>
+
+<button class="clear" id="clear">Clear</button>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const a = $('a'), b = $('b');
+
+// Grouped for reading (Indian digit grouping, which is what his figures use),
+// but the Copy button hands over the plain number.
+const group = (n) => {
+  const [i, d] = String(n).split('.');
+  const s = Number(i).toLocaleString('en-IN');
+  return d ? s + '.' + d : s;
+};
+const tidy = (n) => {
+  if (!Number.isFinite(n)) return '';
+  const r = Math.round(n * 1e6) / 1e6;          // kill float dust, keep 6dp
+  return String(r);
+};
+const parse = (el) => {
+  const raw = el.value.trim().replace(/,/g, '');
+  if (!raw || raw === '-' || raw === '.') return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+};
+
+let lastPlain = '';
+
+function calc() {
+  const x = parse(a), y = parse(b);
+  const value = $('value'), copy = $('copy'), working = $('working');
+
+  $('f-a').classList.remove('lo');
+  $('f-b').classList.remove('lo');
+
+  if (x === null || y === null) {
+    value.textContent = '—';
+    value.classList.add('empty');
+    copy.hidden = true;
+    working.innerHTML = '<p class="hint">Enter both numbers and the steps appear here.</p>';
+    lastPlain = '';
+    return;
+  }
+
+  const lo = Math.min(x, y), hi = Math.max(x, y);
+  const diff = hi - lo;
+  const half = diff / 2;
+  const out = lo + half;
+
+  // mark which field held the smaller number, so the steps are traceable
+  if (x <= y) $('f-a').classList.add('lo'); else $('f-b').classList.add('lo');
+
+  lastPlain = tidy(out);
+  value.textContent = group(lastPlain);
+  value.classList.remove('empty');
+  copy.hidden = false;
+  copy.textContent = 'Copy';
+  copy.classList.remove('done');
+
+  working.innerHTML =
+    '<div class="step"><span>Difference</span><b>' + group(tidy(hi)) + ' − ' + group(tidy(lo)) + ' = ' + group(tidy(diff)) + '</b></div>' +
+    '<div class="step"><span>Half of it</span><b>' + group(tidy(diff)) + ' ÷ 2 = ' + group(tidy(half)) + '</b></div>' +
+    '<div class="step"><span>Add the smaller</span><b>' + group(tidy(half)) + ' + ' + group(tidy(lo)) + ' = ' + group(lastPlain) + '</b><i>midpoint</i></div>';
+}
+
+a.addEventListener('input', calc);
+b.addEventListener('input', calc);
+for (const el of [a, b]) {
+  el.addEventListener('keydown', (e) => { if (e.key === 'Enter') el.blur(); });
+  el.addEventListener('focus', () => el.select());
+}
+
+$('copy').addEventListener('click', async () => {
+  const btn = $('copy');
+  try {
+    await navigator.clipboard.writeText(lastPlain);
+    btn.textContent = 'Copied';
+    btn.classList.add('done');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1400);
+  } catch (err) {
+    // Clipboard refused (older iOS, or a webview): select the number instead.
+    const r = document.createRange();
+    r.selectNodeContents($('value'));
+    const sel = getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+    btn.textContent = 'Selected — hold to copy';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2200);
+  }
+});
+
+$('clear').addEventListener('click', () => {
+  a.value = ''; b.value = ''; calc(); a.focus();
+});
+
+calc();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => console.warn('sw:', err));
+  });
+}
+</script>
+</body>
+</html>
